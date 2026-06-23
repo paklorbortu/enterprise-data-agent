@@ -1,0 +1,35 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - -t
+      - gcr.io/$PROJECT_ID/enterprise-data-agent:latest
+      - .
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [push, gcr.io/$PROJECT_ID/enterprise-data-agent:latest]
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - enterprise-data-agent
+      - --image=gcr.io/$PROJECT_ID/enterprise-data-agent:latest
+      - --region=us-central1
+      - --platform=managed
+      - --allow-unauthenticated
+      - --memory=2Gi
+      - --cpu=2
+      - --timeout=300
+      - --concurrency=10
+      - --min-instances=0
+      - --max-instances=5
+      - --set-env-vars=GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=us-central1,GOOGLE_GENAI_USE_VERTEXAI=True,BIGQUERY_PROJECT_ID=$PROJECT_ID,BIGQUERY_DATASET_ID=sales,BIGQUERY_LOCATION=asia-east1,TARGET_DRIVE_FOLDER_ID=1FX8ufUnsEJO3qiyzQ-qmEdKJfu6Jx5A1,DEFAULT_MODEL=gemini-2.5-flash
+      - --set-secrets=/app/gdocs-mcp/token.json=gdocs-oauth-token:latest
+
+images:
+  - gcr.io/$PROJECT_ID/enterprise-data-agent:latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY

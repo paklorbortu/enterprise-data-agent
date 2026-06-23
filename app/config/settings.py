@@ -1,11 +1,12 @@
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
 # Base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Load environment variables from .env file
+# Load environment variables from .env file (no-op on Cloud Run where envs are injected)
 load_dotenv(dotenv_path=BASE_DIR / ".env", override=True)
 
 # GCP & Model Configurations
@@ -22,20 +23,43 @@ if GEMINI_API_KEY:
 
 DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gemini-2.5-flash")
 
+# On Cloud Run, the container is Linux. Locally on Windows, npx is npx.cmd.
+_IS_WINDOWS = sys.platform == "win32"
+_NPX = "npx.cmd" if _IS_WINDOWS else "npx"
+
+# gdocs-mcp working directory:
+# - On Cloud Run: /app/gdocs-mcp (copied into the container by Dockerfile)
+# - Locally: relative path resolves to the project root's gdocs-mcp folder
+_GDOCS_MCP_CWD = str(BASE_DIR / "gdocs-mcp")
+
+# On Cloud Run, secrets are mounted at /app/gdocs-mcp/secrets/
+# Locally, gdocs-mcp reads credentials.json and token.json from its own directory.
+_GDOCS_CREDENTIALS = os.getenv(
+    "GOOGLE_DOCS_CREDENTIALS_PATH",
+    str(BASE_DIR / "gdocs-mcp" / "credentials.json"),
+)
+
 # ==============================================================================
 # MCP ENVIRONMENT CONTEXT ISOLATION
 # ==============================================================================
 
-# 1. BigQuery Environment Setup
+# BigQuery env — omit GOOGLE_APPLICATION_CREDENTIALS on Cloud Run (ADC is used automatically)
 bigquery_env = os.environ.copy()
-bigquery_env["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
 bigquery_env["BIGQUERY_PROJECT_ID"] = os.getenv("BIGQUERY_PROJECT_ID", "")
 bigquery_env["BIGQUERY_DATASET_ID"] = os.getenv("BIGQUERY_DATASET_ID", "")
+_local_adc = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+if _local_adc:
+    bigquery_env["GOOGLE_APPLICATION_CREDENTIALS"] = _local_adc
 
-# 2. Google Docs Environment Setup
+# Google Docs env
 docs_env = os.environ.copy()
 if os.getenv("TARGET_DRIVE_FOLDER_ID"):
     docs_env["TARGET_DRIVE_FOLDER_ID"] = os.getenv("TARGET_DRIVE_FOLDER_ID", "")
+# Pass writable token/credentials paths into the gdocs-mcp subprocess
+if os.getenv("GDOCS_TOKEN_PATH"):
+    docs_env["GDOCS_TOKEN_PATH"] = os.getenv("GDOCS_TOKEN_PATH")
+if os.getenv("GDOCS_CREDENTIALS_PATH"):
+    docs_env["GDOCS_CREDENTIALS_PATH"] = os.getenv("GDOCS_CREDENTIALS_PATH")
 
 # ==============================================================================
 # MODEL CONTEXT PROTOCOL (MCP) SERVER CONFIGURATIONS
@@ -54,12 +78,12 @@ MCP_SERVERS = {
     "google-docs": {
         "command": "node",
         "args": ["build/server.js"],
-        "cwd": "C:/Users/phili/Documents/capstone-project/enterprise-data-agent/gdocs-mcp",
-        "env": docs_env
+        "cwd": _GDOCS_MCP_CWD,
+        "env": docs_env,
     },
     "chart-generator": {
-        "command": "npx.cmd",
+        "command": _NPX,
         "args": ["-y", "@antv/mcp-server-chart"],
-        "env": os.environ.copy()
-    }
+        "env": os.environ.copy(),
+    },
 }

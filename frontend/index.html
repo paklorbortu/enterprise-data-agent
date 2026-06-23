@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Data Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --black: #0a0a0a;
+            --ink: #1a1a1a;
+            --ink-secondary: #5c5c5c;
+            --ink-tertiary: #999;
+            --white: #ffffff;
+            --surface: #f7f7f5;
+            --surface-hover: #f0efec;
+            --border: rgba(0, 0, 0, 0.1);
+            --border-strong: rgba(0, 0, 0, 0.18);
+            --accent-blue: #1a56db;
+            --accent-blue-bg: #eff5ff;
+            --accent-green: #0e6c3a;
+            --accent-green-bg: #edfcf2;
+            --accent-amber: #92400e;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #991b1b;
+            --accent-red-bg: #fef2f2;
+            --sidebar-w: 260px;
+            --input-bar-h: 80px;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--white);
+            color: var(--ink);
+        }
+
+        /* Layout shell */
+        .shell {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-w);
+            min-width: var(--sidebar-w);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 20px 16px 14px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .sidebar-header h1 {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--ink-tertiary);
+        }
+
+        .new-chat-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            margin-top: 12px;
+            padding: 8px 10px;
+            background: var(--black);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        .new-chat-btn:hover {
+            opacity: 0.85;
+        }
+
+        .new-chat-btn svg {
+            flex-shrink: 0;
+        }
+
+        .session-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 8px;
+        }
+
+        .session-item {
+            padding: 9px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--ink-secondary);
+            border: 1px solid transparent;
+            transition: background 0.1s, border-color 0.1s;
+            margin-bottom: 2px;
+        }
+
+        .session-item:hover {
+            background: var(--surface-hover);
+        }
+
+        .session-item.active {
+            background: var(--white);
+            border-color: var(--border);
+            color: var(--ink);
+            font-weight: 500;
+        }
+
+        .session-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .session-meta {
+            font-size: 11px;
+            color: var(--ink-tertiary);
+            margin-top: 2px;
+        }
+
+        /* Main */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Thread */
+        .thread {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px 0 24px;
+            scroll-behavior: smooth;
+        }
+
+        .thread-inner {
+            max-width: 660px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 32px;
+        }
+
+        .empty-logo {
+            width: 48px;
+            height: 48px;
+            background: var(--black);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .empty-logo svg {
+            color: white;
+        }
+
+        .empty-state h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ink);
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            color: var(--ink-secondary);
+            max-width: 360px;
+            line-height: 1.6;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .suggestion-chip {
+            padding: 8px 14px;
+            border: 1px solid var(--border-strong);
+            border-radius: 999px;
+            font-size: 13px;
+            color: var(--ink-secondary);
+            cursor: pointer;
+            background: var(--white);
+            transition: all 0.15s;
+        }
+
+        .suggestion-chip:hover {
+            background: var(--surface);
+            border-color: var(--black);
+            color: var(--ink);
+        }
+
+        /* Turn */
+        .turn {
+            margin-bottom: 32px;
+        }
+
+        .turn-question {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+        }
+
+        .turn-question-bubble {
+            background: var(--black);
+            color: var(--white);
+            padding: 10px 16px;
+            border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
+            font-size: 14px;
+            line-height: 1.5;
+            max-width: 80%;
+        }
+
+        /* Phase progress */
+        .phase-track {
+            margin-bottom: 20px;
+        }
+
+        .phase-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+            font-size: 13px;
+            color: var(--ink-tertiary);
+        }
+
+        .phase-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: var(--border-strong);
+            transition: background 0.3s;
+        }
+
+        .phase-item.running .phase-dot {
+            background: var(--accent-blue);
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+
+        .phase-item.done .phase-dot {
+            background: var(--accent-green);
+        }
+
+        .phase-item.done {
+            color: var(--ink-secondary);
+        }
+
+        .phase-item.running {
+            color: var(--ink);
+            font-weight: 500;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.75);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            @keyframes pulse {
+
+                0%,
+                100% {
+                    opacity: 1;
+                }
+
+                50% {
+                    opacity: 0.6;
+                }
+            }
+        }
+
+        /* Result card */
+        .result-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .result-chart {
+            width: 100%;
+            max-height: 280px;
+            object-fit: contain;
+            display: block;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .result-body {
+            padding: 16px 18px;
+        }
+
+        .result-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .result-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--white);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ink);
+            text-decoration: none;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .result-link:hover {
+            background: var(--surface);
+            border-color: var(--black);
+        }
+
+        .result-link svg {
+            color: var(--ink-secondary);
+        }
+
+        /* Error state */
+        .error-bubble {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            background: var(--accent-red-bg);
+            border: 1px solid rgba(153, 27, 27, 0.15);
+            font-size: 13px;
+            color: var(--accent-red);
+            line-height: 1.5;
+        }
+
+        /* Input bar */
+        .input-bar {
+            flex-shrink: 0;
+            border-top: 1px solid var(--border);
+            padding: 16px 24px;
+            background: var(--white);
+        }
+
+        .input-inner {
+            max-width: 660px;
+            margin: 0 auto;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px 44px 10px 14px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--ink);
+            background: var(--white);
+            resize: none;
+            line-height: 1.5;
+            max-height: 140px;
+            overflow-y: auto;
+            transition: border-color 0.15s;
+            field-sizing: content;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--black);
+        }
+
+        .input-field::placeholder {
+            color: var(--ink-tertiary);
+        }
+
+        .send-btn {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            width: 30px;
+            height: 30px;
+            border-radius: var(--radius-sm);
+            background: var(--black);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: opacity 0.15s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            opacity: 0.8;
+        }
+
+        .send-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .input-hint {
+            font-size: 11px;
+            color: var(--ink-tertiary);
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        /* Thinking skeleton */
+        .skeleton-line {
+            height: 12px;
+            border-radius: 4px;
+            background: var(--surface);
+            animation: shimmer 1.4s ease-in-out infinite;
+            margin-bottom: 8px;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .skeleton-line {
+                animation: none;
+                opacity: 0.6;
+            }
+        }
+
+        /* Thinking label */
+        .thinking-label {
+            font-size: 12px;
+            color: var(--ink-tertiary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .thinking-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            animation: pulse 1s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="shell">
+
+        <!-- Sidebar -->
+        <aside class="sidebar" role="navigation" aria-label="Conversation history">
+            <div class="sidebar-header">
+                <h1>Data Agent</h1>
+                <button class="new-chat-btn" onclick="newSession()" aria-label="Start a new conversation">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="7" y1="2" x2="7" y2="12" />
+                        <line x1="2" y1="7" x2="12" y2="7" />
+                    </svg>
+                    New analysis
+                </button>
+            </div>
+            <div class="session-list" id="sessionList" role="list" aria-label="Past conversations"></div>
+        </aside>
+
+        <!-- Main -->
+        <main class="main">
+            <div class="thread" id="thread" role="log" aria-live="polite" aria-label="Conversation">
+                <div class="thread-inner" id="threadInner">
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-logo" aria-hidden="true">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round">
+                                <path d="M3 3v18h18" />
+                                <path d="M7 16l4-8 4 4 3-6" />
+                            </svg>
+                        </div>
+                        <h2>Ask about your sales data</h2>
+                        <p>Query BigQuery, generate charts, and get executive reports delivered to Google Docs.</p>
+                        <div class="suggestions" role="list" aria-label="Suggested questions">
+                            <button class="suggestion-chip" onclick="fillInput(this.textContent)" role="listitem">Sales
+                                by category in 2024</button>
+                            <button class="suggestion-chip" onclick="fillInput(this.textContent)" role="listitem">Total
+                                profit by region</button>
+                            <button class="suggestion-chip" onclick="fillInput(this.textContent)" role="listitem">Top 5
+                                products by revenue</button>
+                            <button class="suggestion-chip" onclick="fillInput(this.textContent)"
+                                role="listitem">Monthly trends for 2023</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-bar" role="form" aria-label="Send a question">
+                <div class="input-inner">
+                    <div class="input-wrap">
+                        <textarea id="inputField" class="input-field"
+                            placeholder="Ask a question about your sales data..." rows="1" aria-label="Question"
+                            onkeydown="handleKey(event)"></textarea>
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Send" disabled>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="7" y1="12" x2="7" y2="2" />
+                                <polyline points="3,6 7,2 11,6" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <p class="input-hint">Results are written to Google Docs and may take 1-2 minutes</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API = '';
+        let currentSessionId = null;
+        let sessions = {};
+        let isRunning = false;
+
+        const PHASES = [
+            { key: 'data_analyst_agent', label: 'Querying BigQuery' },
+            { key: 'data_formatter_agent', label: 'Structuring data' },
+            { key: 'charting_specialist_agent', label: 'Generating chart' },
+            { key: 'charting_formatter_agent', label: 'Finalizing chart' },
+            { key: 'reporting_agent', label: 'Writing report' },
+            { key: 'reporting_formatter_agent', label: 'Finalizing report' },
+        ];
+
+        const $ = id => document.getElementById(id);
+
+        async function init() {
+            try {
+                const res = await fetch(`${API}/sessions`);
+                if (!res.ok) return;
+                const list = await res.json();
+                for (const s of list) {
+                    sessions[s.session_id] = { id: s.session_id, title: s.title, turns: [] };
+                }
+                renderSidebar();
+                if (list.length > 0) loadSession(list[0].session_id);
+            } catch (e) {
+                console.warn('Backend not reachable. Start the server at localhost:8000.');
+            }
+        }
+
+        async function newSession() {
+            try {
+                const res = await fetch(`${API}/sessions`, { method: 'POST' });
+                const data = await res.json();
+                currentSessionId = data.session_id;
+                sessions[currentSessionId] = { id: currentSessionId, title: 'New analysis', turns: [] };
+                renderSidebar();
+                renderThread();
+            } catch (e) {
+                alert('Could not connect to backend. Make sure the server is running.');
+            }
+        }
+
+        async function loadSession(id) {
+            currentSessionId = id;
+            try {
+                const res = await fetch(`${API}/sessions/${id}`);
+                const data = await res.json();
+                sessions[id] = { ...sessions[id], turns: data.turns || [] };
+            } catch (e) { }
+            renderSidebar();
+            renderThread();
+        }
+
+        function renderSidebar() {
+            const list = $('sessionList');
+            const entries = Object.values(sessions).reverse();
+            if (entries.length === 0) {
+                list.innerHTML = '<p style="font-size:12px;color:var(--ink-tertiary);padding:12px 10px;">No conversations yet</p>';
+                return;
+            }
+            list.innerHTML = entries.map(s => `
+    <div class="session-item ${s.id === currentSessionId ? 'active' : ''}" onclick="loadSession('${s.id}')" role="listitem" tabindex="0" aria-current="${s.id === currentSessionId ? 'true' : 'false'}">
+      <div class="session-title">${escHtml(s.title || 'New analysis')}</div>
+      <div class="session-meta">${s.turns ? s.turns.length : 0} ${(s.turns || []).length === 1 ? 'question' : 'questions'}</div>
+    </div>
+  `).join('');
+        }
+
+        function renderThread() {
+            const inner = $('threadInner');
+            const session = sessions[currentSessionId];
+
+            if (!session || session.turns.length === 0) {
+                inner.innerHTML = `
+      <div class="empty-state" id="emptyState">
+        <div class="empty-logo" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 3-6"/>
+          </svg>
+        </div>
+        <h2>Ask about your sales data</h2>
+        <p>Query BigQuery, generate charts, and get executive reports delivered to Google Docs.</p>
+        <div class="suggestions" role="list" aria-label="Suggested questions">
+          <button class="suggestion-chip" onclick="fillInput(this.textContent)" role="listitem">Sales by category in 2024</button>
+          <button class="suggestion-chip" onclick="fillInput(this.textContent)" role="listitem">Total profit by region</button>
+          <button class="suggestion-chip" onclick="fillInput(this.textContent)" role="listitem">Top 5 products by revenue</button>
+          <button class="suggestion-chip" onclick="fillInput(this.textContent)" role="listitem">Monthly trends for 2023</button>
+        </div>
+      </div>`;
+                return;
+            }
+
+            inner.innerHTML = session.turns.map((turn, i) => renderTurn(turn, i)).join('');
+            scrollToBottom();
+        }
+
+        function renderTurn(turn, idx) {
+            const hasResult = turn.document_url && !turn.error;
+            const hasError = !!turn.error;
+
+            return `
+    <div class="turn" id="turn-${idx}">
+      <div class="turn-question">
+        <div class="turn-question-bubble">${escHtml(turn.question)}</div>
+      </div>
+      ${hasResult ? renderResult(turn) : ''}
+      ${hasError ? `<div class="error-bubble">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="8" cy="8" r="7"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r="0.5" fill="currentColor"/></svg>
+        <span>${escHtml(turn.error)}</span>
+      </div>` : ''}
+    </div>`;
+        }
+
+        function renderResult(turn) {
+            return `
+    <div class="result-card">
+      ${turn.chart_image_url ? `<img class="result-chart" src="${escHtml(turn.chart_image_url)}" alt="Generated chart for: ${escHtml(turn.title || turn.question)}" loading="lazy">` : ''}
+      <div class="result-body">
+        <p class="result-title">${escHtml(turn.title || 'Report generated')}</p>
+        <a class="result-link" href="${escHtml(turn.document_url)}" target="_blank" rel="noopener noreferrer">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="2" y="2" width="10" height="10" rx="2"/><path d="M5 7h4M7 5v4"/></svg>
+          Open in Google Docs
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 9.5l7-7M4 2.5h5.5V8"/></svg>
+        </a>
+      </div>
+    </div>`;
+        }
+
+        function renderThinking(question) {
+            return `
+    <div class="turn" id="turn-pending">
+      <div class="turn-question">
+        <div class="turn-question-bubble">${escHtml(question)}</div>
+      </div>
+      <div id="phaseTrack" class="phase-track">
+        <div class="thinking-label">
+          <div class="thinking-dot" aria-hidden="true"></div>
+          Analyzing your question
+        </div>
+        ${PHASES.map(p => `<div class="phase-item" id="phase-${p.key}">
+          <div class="phase-dot"></div>
+          <span>${p.label}</span>
+        </div>`).join('')}
+      </div>
+      <div id="skeletonPreview" style="margin-top:16px;">
+        <div class="skeleton-line" style="width:60%;"></div>
+        <div class="skeleton-line" style="width:85%;"></div>
+        <div class="skeleton-line" style="width:40%;"></div>
+      </div>
+    </div>`;
+        }
+
+        function markPhaseRunning(key) {
+            PHASES.forEach(p => {
+                const el = $(`phase-${p.key}`);
+                if (!el) return;
+                if (p.key === key) {
+                    el.classList.remove('done');
+                    el.classList.add('running');
+                }
+            });
+        }
+
+        function markPhaseDone(key) {
+            const el = $(`phase-${key}`);
+            if (el) { el.classList.remove('running'); el.classList.add('done'); }
+        }
+
+        async function sendMessage() {
+            if (isRunning) return;
+            const field = $('inputField');
+            const question = field.value.trim();
+            if (!question) return;
+
+            if (!currentSessionId) await newSession();
+            if (!currentSessionId) return;
+
+            isRunning = true;
+            field.value = '';
+            $('sendBtn').disabled = true;
+            field.style.height = 'auto';
+
+            const inner = $('threadInner');
+            const emptyState = $('emptyState');
+            if (emptyState) emptyState.remove();
+
+            inner.insertAdjacentHTML('beforeend', renderThinking(question));
+            scrollToBottom();
+
+            try {
+                const res = await fetch(`${API}/sessions/${currentSessionId}/ask`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question }),
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
+                    throw new Error(err.detail || `HTTP ${res.status}`);
+                }
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+
+                    let eventType = null;
+                    let dataLine = null;
+                    for (const line of lines) {
+                        if (line.startsWith('event: ')) eventType = line.slice(7).trim();
+                        if (line.startsWith('data: ')) dataLine = line.slice(6).trim();
+                        if (line === '' && eventType && dataLine) {
+                            handleSSEEvent(eventType, dataLine);
+                            eventType = null; dataLine = null;
+                        }
+                    }
+                }
+            } catch (e) {
+                const pending = $('turn-pending');
+                if (pending) {
+                    pending.innerHTML += `<div class="error-bubble" style="margin-top:12px;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="8" cy="8" r="7"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r="0.5" fill="currentColor"/></svg>
+        <span>${escHtml(e.message)}</span>
+      </div>`;
+                    const skeleton = $('skeletonPreview');
+                    if (skeleton) skeleton.remove();
+                }
+            } finally {
+                isRunning = false;
+                $('sendBtn').disabled = false;
+                scrollToBottom();
+            }
+        }
+
+        function handleSSEEvent(type, data) {
+            try {
+                const payload = JSON.parse(data);
+                if (type === 'phase') {
+                    if (payload.status === 'running') markPhaseRunning(payload.phase);
+                    if (payload.status === 'complete') markPhaseDone(payload.phase);
+                } else if (type === 'result') {
+                    PHASES.forEach(p => markPhaseDone(p.key));
+                    const pending = $('turn-pending');
+                    if (pending) {
+                        const resultHtml = payload.document_url
+                            ? renderResult(payload)
+                            : `<div class="error-bubble"><span>No report was generated.</span></div>`;
+                        pending.id = `turn-${Object.keys(sessions[currentSessionId]?.turns || {}).length}`;
+                        const phaseTrack = $('phaseTrack');
+                        const skeleton = $('skeletonPreview');
+                        if (phaseTrack) phaseTrack.remove();
+                        if (skeleton) skeleton.remove();
+                        pending.insertAdjacentHTML('beforeend', resultHtml);
+                    }
+                    if (!sessions[currentSessionId]) sessions[currentSessionId] = { id: currentSessionId, title: '', turns: [] };
+                    if (!sessions[currentSessionId].turns) sessions[currentSessionId].turns = [];
+                    sessions[currentSessionId].turns.push(payload);
+                    if (sessions[currentSessionId].title === 'New analysis' || !sessions[currentSessionId].title) {
+                        sessions[currentSessionId].title = payload.question;
+                    }
+                    renderSidebar();
+                    scrollToBottom();
+                } else if (type === 'error') {
+                    const pending = $('turn-pending');
+                    if (pending) {
+                        const phaseTrack = $('phaseTrack');
+                        const skeleton = $('skeletonPreview');
+                        if (phaseTrack) phaseTrack.remove();
+                        if (skeleton) skeleton.remove();
+                        pending.insertAdjacentHTML('beforeend', `<div class="error-bubble">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="8" cy="8" r="7"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r="0.5" fill="currentColor"/></svg>
+          <span>${escHtml(payload.message || 'An error occurred.')}</span>
+        </div>`);
+                    }
+                }
+            } catch (e) { console.warn('SSE parse error', e); }
+        }
+
+        function fillInput(text) {
+            const field = $('inputField');
+            field.value = text;
+            field.focus();
+            $('sendBtn').disabled = false;
+        }
+
+        function handleKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        }
+
+        function scrollToBottom() {
+            const thread = $('thread');
+            thread.scrollTop = thread.scrollHeight;
+        }
+
+        function escHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        $('inputField').addEventListener('input', function () {
+            $('sendBtn').disabled = !this.value.trim() || isRunning;
+        });
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
