@@ -34,7 +34,7 @@ def get_reporting_formatter_agent() -> Agent:
         instruction=(
             "Convert the plain-text summary of a Google Doc creation result into a structured JSON object "
             "matching the enforced output schema. Extract the document ID and report title from the summary. "
-            "Construct document_url as: https://docs.google.com/document/d/{document_id}/edit. "
+            "Construct the document_url by combining: https://docs.google.com/document/d/ + the document ID + /edit. "
             "Do not invent a document ID or title not present in the summary."
         ),
         output_schema=ReportGenerationResult,
