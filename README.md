@@ -199,13 +199,13 @@ enterprise-data-agent/
 - Node.js 20+
 - `uv` package manager: `pip install uv`
 - Google Cloud SDK with a project that has BigQuery, Vertex AI, and Docs API enabled
-- A BigQuery dataset with a [`sales_table`](https://www.kaggle.com/datasets/shantanugarg274/sales-dataset/data) table
+- A BigQuery dataset with a [`sales-table`](https://www.kaggle.com/datasets/shantanugarg274/sales-dataset/data)
 
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/paklorbortu/kaggle-5-day-intensive-vibe-coding-capstone-project.git
-cd kaggle-5-day-intensive-vibe-coding-capstone-project
+git clone https://github.com/paklorbortu/enterprise-data-agent.git
+cd enterprise-data-agent
 uv sync
 ```
 
