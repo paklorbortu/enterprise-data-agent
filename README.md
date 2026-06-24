@@ -204,8 +204,8 @@ enterprise-data-agent/
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-username/enterprise-data-agent
-cd enterprise-data-agent
+git clone https://github.com/paklorbortu/kaggle-5-day-intensive-vibe-coding-capstone-project.git
+cd kaggle-5-day-intensive-vibe-coding-capstone-project
 uv sync
 ```
 
