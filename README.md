@@ -221,7 +221,7 @@ BIGQUERY_DATASET_ID=sales
 BIGQUERY_LOCATION=asia-east1
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/service-account.json
 GOOGLE_DOCS_CREDENTIALS_PATH=/path/to/your/oauth-credentials.json
-TARGET_DRIVE_FOLDER_ID=your-drive-folder-id
+TARGET_DRIVE_FOLDER_ID=your-google-drive-folder-id
 DEFAULT_MODEL=gemini-2.5-flash
 ```
 
