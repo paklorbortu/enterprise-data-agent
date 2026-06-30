@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "google-docs": {
+      "command": "node",
+      "args": ["/Users/olivier/Dev/Trash/copy-tool-mcp/build/server.js"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}

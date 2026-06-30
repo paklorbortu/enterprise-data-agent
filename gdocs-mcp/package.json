@@ -1,0 +1,59 @@
+{
+    "name": "mcp-google-docs",
+    "version": "1.0.0",
+    "description": "Model Context Protocol (MCP) server for Google Docs integration with professional document creation features",
+    "main": "build/server.js",
+    "type": "module",
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "scripts": {
+        "build": "tsc",
+        "build:watch": "tsc -w",
+        "start": "node build/server.js",
+        "dev": "npm run build && npm start",
+        "clean": "rm -rf build",
+        "rebuild": "npm run clean && npm run build",
+        "verify": "node verify-build.js",
+        "lint": "echo 'Linting not configured yet'",
+        "test": "echo 'Tests not implemented yet'",
+        "type-check": "tsc --noEmit",
+        "prestart": "npm run build"
+    },
+    "keywords": [
+        "mcp",
+        "google-docs",
+        "claude",
+        "ai",
+        "model-context-protocol",
+        "document-creation",
+        "professional-documents",
+        "google-apis",
+        "typescript"
+    ],
+    "author": "Google Docs MCP Team",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/olpetit/gdocs-mcp.git"
+    },
+    "bugs": {
+        "url": "https://github.com/olpetit/gdocs-mcp/issues"
+    },
+    "homepage": "https://github.com/olpetit/gdocs-mcp#readme",
+    "files": [
+        "build/**/*",
+        "README.md",
+        "LICENSE"
+    ],
+    "dependencies": {
+        "@google-cloud/local-auth": "^2.1.0",
+        "@modelcontextprotocol/sdk": "^1.4.1",
+        "googleapis": "^126.0.1",
+        "zod": "^3.22.4"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.5",
+        "typescript": "^5.3.3"
+    }
+}
