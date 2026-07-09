@@ -2,7 +2,7 @@
 
 ### A Multi-Agent AI Pipeline That Turns Natural Language Questions Into Executive Reports, Live on Google Cloud Run
 
-**Live Demo:** https://enterprise-data-agent-4au4slh6fa-uc.a.run.app/
+**Live Demo:** [https://enterprise-data-agent-4au4slh6fa-uc.a.run.app/](https://enterprise-data-agent-135378614576.us-central1.run.app/)
 
 > Built for the [Kaggle 5-Day Gen AI Intensive Vibe Coding Capstone](https://www.kaggle.com/competitions/vibecoding-agents-capstone-project) — Track: Agents for Business
 
